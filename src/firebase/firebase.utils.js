@@ -18,7 +18,11 @@ const config = {
     if(!userAuth) return;
 
     const userRef = firestore.doc(`users/${userAuth.uid}`);
+    console.log("userRef", userRef);
+    //const collectionRef = firestore.collection('users');
+
     const snapShot  = await userRef.get();
+    //const collectionSnapshot = await collectionRef.get()
 
     console.log(snapShot);
 
@@ -38,7 +42,39 @@ const config = {
       }
     }
     return userRef;
-  }
+   }
+
+   export const addCollectionAndDocuments = async (collectionKey, objectsToAdd) => {
+     const collectionRef = firestore.collection(collectionKey);
+     console.log(collectionRef);
+
+     const batch = firestore.batch();
+     objectsToAdd.forEach(obj => {
+       const newDocRef = collectionRef.doc();
+       console.log(newDocRef);
+       batch.set(newDocRef, obj)
+     });
+
+     await batch.commit()
+   };
+
+   export const convertCollectionSnapshotToMap = (collections) => {
+    const transformedCollection = collections.docs.map(doc => {
+      const {title, items} = doc.data();
+
+      return {
+        routeName: encodeURI(title.toLowerCase()),
+        id: doc.id,
+        title,
+        items
+      }
+    });
+    console.log(transformedCollection);
+    return transformedCollection.reduce((accumulator, collection) => {
+      accumulator[collection.title.toLowerCase()] = collection;
+      return accumulator;
+    }, {});
+   };
 
   firebase.initializeApp(config);
 
